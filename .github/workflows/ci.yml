@@ -1,0 +1,30 @@
+name: Pipeline CI
+
+on:
+  push:
+    branches:
+
+  pull-request:
+
+
+jobs:
+  sast:
+    name: SAST()
+
+
+
+
+  build:
+    name: build
+
+
+
+
+  lint-and-quality:
+    name: lint&quality
+
+
+
+
+  test:
+    name: test 
