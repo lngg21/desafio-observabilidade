@@ -3,15 +3,23 @@ name: Pipeline CI
 on:
   push:
     branches:
-
-  pull-request:
+  
+      
+  pull_request:
 
 
 jobs:
   sast:
-    name: SAST()
+    name: SAST
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-
+      - name: Rodar njsscan (SAST)
+        uses: ajinabraham/njsscan-action@main
+        with:
+          args: '.'
 
 
   build:
