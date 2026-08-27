@@ -3,19 +3,42 @@ name: Pipeline CI
 on:
   push:
     branches:
-
-  pull-request:
+  
+      
+  pull_request:
 
 
 jobs:
   sast:
-    name: SAST()
+    name: SAST
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-
+      - name: Rodar njsscan (SAST)
+        uses: ajinabraham/njsscan-action@main
+        with:
+          args: '.'
 
 
   build:
     name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
 
 
@@ -27,4 +50,21 @@ jobs:
 
 
   test:
-    name: test 
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v7
+
+      - name: Setup node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
