@@ -3,53 +3,37 @@ name: Pipeline CI
 on:
   push:
     branches:
-        -main
-        -developer
-  
+      - main
+      - developer
   pull_request:
     branches:
-      -main
-      -developer
-
+      - main
+      - developer
 
 jobs:
   sast:
-    runs-on: ubuntu-latest
-
-
-
-
-  build:
-    name: build
+    name: SAST
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Rodar njsscan (SAST)
+        uses: ajinabraham/njsscan-action@master
         with:
-          node-version: 20
-
-      
-
-      - name: Build
-        run: npm run build
-
-
-
+          args: '.'
 
   lint-and-quality:
+    name: Lint & Quality
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
@@ -58,24 +42,17 @@ jobs:
       - name: Run lint
         run: npm run lint --if-present
 
-      
-      
-
-
-
-
   test:
     name: Tests
     runs-on: ubuntu-latest
-
     steps:
-      - name: Code checkout
-        uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup node.js
-        uses: actions/setup-node@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
@@ -83,3 +60,23 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [sast, lint-and-quality, test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
