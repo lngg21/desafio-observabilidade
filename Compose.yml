@@ -3,66 +3,94 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+
     container_name: observabilidade-api
-    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:admin@db:5432/observabilidade_db
+      PORT: 3000
+
+    
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://postgres:admin@db:5432/observabilidade_db
-      PORT: 3000
+
+    restart: always
+
     ports:
       - "3000:3000"
+
     networks:
       - observabilidade-net
 
   db:
-    image: postgres:16
+    image: postgres:16-alpine
+
     container_name: observabilidade-db
-    restart: unless-stopped
+
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: observabilidade_db
-    ports:
-      - "5432:5432"
+
     volumes:
       - db_data:/var/lib/postgresql/data
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+      
+    restart: always
+
+    ports:
+      - "5432:5432"
+    
     networks:
       - observabilidade-net
 
   prometheus:
     image: prom/prometheus:latest
+
     container_name: observabilidade-prometheus
-    restart: unless-stopped
+
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
+
     ports:
       - "9090:9090"
+
     depends_on:
       - api
+
+    restart: always
+
     networks:
       - observabilidade-net
 
   grafana:
     image: grafana/grafana:latest
+
     container_name: observabilidade-grafana
-    restart: unless-stopped
+
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
+      
     volumes:
       - grafana_data:/var/lib/grafana
+
     ports:
       - "3001:3000"
+
     depends_on:
       - prometheus
+
+    restart: always
+
     networks:
       - observabilidade-net
 
