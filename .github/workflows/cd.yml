@@ -3,5 +3,14 @@ name: CD Docker/Terraform
 on:
   push:
     branches:
+      -main
+      -developer
+
+jobs:
+  docker-build-push:
+    runs-on: ubuntu-latest
+
+
+
 
 
