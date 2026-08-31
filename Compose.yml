@@ -1,8 +1,7 @@
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+
+    image: administrador/observabilidade-api:latest
 
     container_name: observabilidade-api
 
