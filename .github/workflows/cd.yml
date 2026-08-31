@@ -1,16 +1,82 @@
-name: CD Docker/Terraform
+name: CD - Deploy
 
 on:
-  push:
-    branches:
-      -main
-      -developer
+  workflow_dispatch:
 
 jobs:
-  docker-build-push:
-    runs-on: ubuntu-latest
 
+  deploy:
+    name: Deploy na EC2 LocalStack
+    runs-on: self-hosted
 
+    steps:
 
+      - name: Checkout
+        uses: actions/checkout@v5
 
+      - name: Validar LocalStack
+        run: |
+          curl -f http://localhost:4566/_localstack/health
 
+      - name: Recuperar EC2
+        id: ec2
+        run: |
+          INSTANCE_ID=$(awslocal ec2 describe-instances \
+            --filters "Name=tag:Name,Values=observabilidade-ec2" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text)
+
+          echo "INSTANCE_ID=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Localizar container da EC2
+        id: container
+        run: |
+          CONTAINER_ID=$(docker ps \
+            --filter "name=localstack-ec2.${{ steps.ec2.outputs.INSTANCE_ID }}" \
+            --format "{{.ID}}" \
+            | head -n 1)
+
+          if [ -z "$CONTAINER_ID" ]; then
+            echo "Container da EC2 não encontrado."
+            exit 1
+          fi
+
+          echo "CONTAINER_ID=$CONTAINER_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Criar diretório da aplicação
+        run: |
+          docker exec \
+            ${{ steps.container.outputs.CONTAINER_ID }} \
+            mkdir -p /opt/observabilidade
+
+      - name: Copiar Docker Compose
+        run: |
+          docker cp \
+            docker-compose.yml \
+            ${{ steps.container.outputs.CONTAINER_ID }}:/opt/observabilidade/docker-compose.yml
+
+      - name: Copiar Prometheus
+        run: |
+          docker exec \
+            ${{ steps.container.outputs.CONTAINER_ID }} \
+            mkdir -p /opt/observabilidade/prometheus
+
+          docker cp \
+            prometheus/prometheus.yml \
+            ${{ steps.container.outputs.CONTAINER_ID }}:/opt/observabilidade/prometheus/prometheus.yml
+
+      - name: Executar Docker dentro da EC2
+        run: |
+          docker exec \
+            ${{ steps.container.outputs.CONTAINER_ID }} \
+            sh -c "
+              cd /opt/observabilidade &&
+              docker compose pull &&
+              docker compose up -d
+            "
+
+      - name: Verificar containers
+        run: |
+          docker exec \
+            ${{ steps.container.outputs.CONTAINER_ID }} \
+            docker ps
