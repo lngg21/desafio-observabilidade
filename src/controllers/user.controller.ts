@@ -13,8 +13,9 @@ export class UserController {
       const { name, email, driverLicense } = req.body;
       const user = await this.userService.createUser({ name, email, driverLicense });
       return res.status(201).json(user);
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (error) {
+      const err = error as Error;
+      return res.status(400).json({ error: err.message });
     }
   }
 
@@ -22,8 +23,9 @@ export class UserController {
     try {
       const users = await this.userService.getAllUsers();
       return res.json(users);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error) {
+      const err = error as Error;
+      return res.status(500).json({ error: err.message });
     }
   }
 }
