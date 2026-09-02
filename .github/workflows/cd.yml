@@ -47,7 +47,7 @@ jobs:
     name: Deploy na EC2
     runs-on: ubuntu-latest
 
-    depends-on:
+    needs:
       - docker-build-push
 
     steps:
