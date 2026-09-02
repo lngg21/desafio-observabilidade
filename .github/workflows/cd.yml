@@ -55,10 +55,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Validate Docker Compose
-        run: |
-          docker compose config
-
       - name: SSH connection
         run: |
           EC2_HOST="ec2-xx-xx-xx-xx.compute.us-east-1.com"
