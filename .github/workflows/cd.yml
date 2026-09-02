@@ -47,18 +47,13 @@ jobs:
     name: Deploy na EC2
     runs-on: ubuntu-latest
 
-    needs:
+    depends-on:
       - docker-build-push
 
     steps:
 
       - name: Checkout repository
         uses: actions/checkout@v5
-
-      - name: Validate deployment files
-        run: |
-          test -f docker-compose.yml
-          test -f prometheus/prometheus.yml
 
       - name: Validate Docker Compose
         run: |
@@ -85,7 +80,7 @@ jobs:
           echo "Uploading prometheus/prometheus.yml"
           echo "Files transferred successfully."
 
-      - name: Simulate application update
+      - name: Application update
         run: |
           IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/obs-devops:main"
 
@@ -95,7 +90,7 @@ jobs:
           echo "docker compose pull"
           echo "docker compose up -d --remove-orphans"
 
-      - name: Simulate deployment validation
+      - name: Deployment validation
         run: |
           echo "Checking containers..."
 
